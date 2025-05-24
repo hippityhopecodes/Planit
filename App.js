@@ -50,6 +50,7 @@ export default function App() {
     const [endTime, setEndTime] = useState(new Date());
     const [showStartTimePicker, setShowStartTimePicker] = useState(false);
     const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     // Load tasks from AsyncStorage when the component mounts (when the app starts)
     useEffect(() => {
@@ -60,6 +61,7 @@ export default function App() {
                setTasks(JSON.parse(jsonValueTasks));
            }
         }
+        loadedTasks();
     }, []);
 
     // On every start of the app, as well as daily, carry over incompplete tasks
@@ -73,17 +75,35 @@ export default function App() {
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedTasks));
     }
 
-    // Carry over imcomplete tasks from the previous day
+    // Carry over incomplete tasks from the previous day
     function rollOverIncompleteTasks() {
-
+        const today = new Date();
+        const updatedTasks = tasks.map(task => {
+            const taskStart = new Date(task.startTime);
+            const taskEnd = new Date(task.endTime);
+            if (!task.done && taskStart < today) {
+            const duration = taskEnd - taskStart;
+            const newStart = new Date(today.setHours(9,0,0,0)); // e.g. 9AM today
+            const newEnd = new Date(newStart.getTime() + duration);
+            return {...task, startTime: newStart.toISOString(), endTime: newEnd.toISOString()};
+          }
+            return task;
+        });
+        saveTasks(updatedTasks);
     }
 
     // Filter tasks based on the selected date
-    const tasksForSlectedDay = tasks.filter(task => isSameDay(new Date(task.startTime), selectedDate));
+    const tasksForSelectedDay = tasks.filter(task => isSameDay(new Date(task.startTime), selectedDate));
 
     // Mark a task as done
     function markAsDone(taskID) {
-
+        const updatedTasks = tasks.map(task => {
+            if(task.id === taskID) {
+                return {...task, done: true};
+            }
+            return task;
+        });
+        saveTasks(updatedTasks);
     }
 
     // Add a new task
@@ -130,6 +150,100 @@ export default function App() {
     }
 
     // Render the UI for the App interface
+    return (
+        <View style={{ flex: 1, padding: 20 }}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 10 }}>
+                Tasks for {selectedDate.toDateString()}
+            </Text>
+            
+            <Button title="Select Date" onPress={() => setShowDatePicker(true)} />
+            {showDatePicker && (
+                <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display="default"
+                    onChange={(e, selected) => {
+                        setShowDatePicker(false);
+                        if (selected) setSelectedDate(selected);
+                    }}
+                />
+            )}
+
+            {/* List of tasks for the selected day */}
+            <FlatList
+                data={tasksForSelectedDay}
+                keyExtractor={item => item.id}
+                renderItem={({ item }) => (
+                    <View style={{ padding: 10, borderBottomWidth: 1 }}>
+                        <Text style={{ fontSize: 18 }}>
+                            {item.title} ({formatTime(item.startTime)} - {formatTime(item.endTime)})
+                        </Text>
+                        <Text>Status: {item.done ? "✅ Done" : "❌ Not Done"}</Text>
+                        {!item.done && (
+                            <Button title="Mark as Done" onPress={() => markAsDone(item.id)} />
+                        )}
+                    </View>
+                )}
+            />
+
+            <Button title="Add Task" onPress={() => setShowAddTaskModal(true)} />
+
+            {/* Modal */}
+            <Modal visible={showAddTaskModal} animationType="slide" transparent>
+                <View style={{
+                    flex: 1, justifyContent: 'center',
+                    backgroundColor: 'rgba(0,0,0,0.5)'
+                }}>
+                    <View style={{
+                        backgroundColor: 'white', margin: 20, padding: 20,
+                        borderRadius: 10, elevation: 5
+                    }}>
+                        <Text style={{ fontSize: 18 }}>Add Task</Text>
+                        <TextInput
+                            placeholder="Title"
+                            value={title}
+                            onChangeText={setTitle}
+                            style={{ borderBottomWidth: 1, marginBottom: 10 }}
+                        />
+                        <Button title="Pick Start Time" onPress={() => setShowStartTimePicker(true)} />
+                        <Text>Start: {formatTime(startTime)}</Text>
+                        <Button title="Pick End Time" onPress={() => setShowEndTimePicker(true)} />
+                        <Text>End: {formatTime(endTime)}</Text>
+
+                        {showStartTimePicker && (
+                            <DateTimePicker
+                                value={startTime}
+                                mode="time"
+                                is24Hour={false}
+                                display="default"
+                                onChange={(e, selected) => {
+                                    setShowStartTimePicker(false);
+                                    if (selected) setStartTime(selected);
+                                }}
+                            />
+                        )}
+                        {showEndTimePicker && (
+                            <DateTimePicker
+                                value={endTime}
+                                mode="time"
+                                is24Hour={false}
+                                display="default"
+                                onChange={(e, selected) => {
+                                    setShowEndTimePicker(false);
+                                    if (selected) setEndTime(selected);
+                                }}
+                            />
+                        )}
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+                            <Button title="Cancel" onPress={() => setShowAddTaskModal(false)} />
+                            <Button title="Save Task" onPress={addTask} />
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+        </View>
+    );
 }
 
 
