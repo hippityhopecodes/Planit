@@ -227,22 +227,26 @@ export default function App() {
             <Text style={{ fontSize: 18, color: theme.text }}>
               {item.title} ({formatTime(item.startTime)} - {formatTime(item.endTime)})
             </Text>
-            <Text style={{ color: theme.text }}>Status: {item.done ? '✅ Done' : '❌ Not Done'}</Text>
-            {!item.done && <Button title="Mark as Done" onPress={() => markAsDone(item.id)} />}
+            <Text style={{ color: theme.text }}>
+              Status: {item.done ? '✅ Done' : '❌ Not Done'}
+            </Text>
+            {!item.done && (
+              <Button title="Mark as Done" onPress={() => markAsDone(item.id)} />
+            )}
           </View>
         )}
       />
 
-    <Button
+      <Button
         title="Add Task"
         onPress={() => {
-        const now = new Date();
-        setStartTime(now);
-        setEndTime(new Date(now.getTime() + 60 * 60 * 1000)); // one hour later
-        setTitle('');
-        setShowAddTaskModal(true);
-    }}
-/>
+          const now = new Date();
+          setStartTime(now);
+          setEndTime(new Date(now.getTime() + 60 * 60 * 1000)); // one hour later
+          setTitle('');
+          setShowAddTaskModal(true);
+        }}
+      />
 
       {/* Add Task Modal */}
       <Modal visible={showAddTaskModal} animationType="slide" transparent>
@@ -256,7 +260,9 @@ export default function App() {
               elevation: 5,
             }}
           >
-            <Text style={{ fontSize: 18, color: theme.text, marginBottom: 10 }}>Add Task</Text>
+            <Text style={{ fontSize: 18, color: theme.text, marginBottom: 10 }}>
+              Add Task
+            </Text>
             <TextInput
               placeholder="Title"
               placeholderTextColor={theme.placeholder}
