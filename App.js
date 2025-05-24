@@ -3,6 +3,7 @@
  * @author Hope Spence
  */
 import React, { useState, useEffect } from 'react';
+import { SafeAreaView } from 'react-native';
 import {
   View,
   Text,
@@ -142,10 +143,17 @@ export default function App() {
   }
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: theme.background }}>
-      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: theme.text }}>
-        Tasks for {selectedDate.toDateString()}
-      </Text>
+    <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: theme.background }}>
+    <View style={{ alignItems: 'center', marginBottom: 10 }}>
+        <Text style={{ fontSize: 18, fontWeight: '600', color: theme.text }}>
+        Tasks for {selectedDate.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: '2-digit',
+            day: '2-digit',
+            year: '2-digit',
+        })}
+        </Text>
+    </View>
       <Button title="Change Date" onPress={() => setShowDatePicker(true)} />
       {showDatePicker && (
         <DateTimePicker
@@ -241,7 +249,7 @@ export default function App() {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
