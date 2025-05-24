@@ -3,7 +3,18 @@
  * @author Hope Spence
  */
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, Text, TextInput, Button, FlatList, Modal, Platform, Alert, useColorScheme } from 'react-native';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  TextInput,
+  Button,
+  FlatList,
+  Modal,
+  Platform,
+  Alert,
+  useColorScheme,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -65,7 +76,7 @@ export default function App() {
 
   function rollOverIncompleteTasks() {
     const today = new Date();
-    const updatedTasks = tasks.map(task => {
+    const updatedTasks = tasks.map((task) => {
       const taskDate = new Date(task.startTime);
       if (!task.done && taskDate < today) {
         return { ...task, startTime: today.toISOString(), endTime: today.toISOString() };
@@ -75,12 +86,12 @@ export default function App() {
     saveTasks(updatedTasks);
   }
 
-  const tasksForSelectedDay = tasks.filter(task =>
+  const tasksForSelectedDay = tasks.filter((task) =>
     isSameDay(new Date(task.startTime), selectedDate)
   );
 
   function markAsDone(taskID) {
-    const updatedTasks = tasks.map(task => {
+    const updatedTasks = tasks.map((task) => {
       if (task.id === taskID) return { ...task, done: true };
       return task;
     });
@@ -122,13 +133,31 @@ export default function App() {
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
   }
 
-  // Custom iOS modal wrapper for DateTimePicker
+  // Custom iOS modal wrapper for DateTimePicker with fixed colors and styling
   const IOSDatePickerModal = ({ visible, onClose, value, mode, onChange }) => {
     if (Platform.OS !== 'ios') return null;
     return (
       <Modal transparent animationType="fade" visible={visible}>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <View style={{ backgroundColor: theme.modalBackground, padding: 10 }}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'flex-end',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: theme.modalBackground,
+              padding: 10,
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 5,
+              elevation: 10,
+            }}
+          >
             <DateTimePicker
               value={value}
               mode={mode}
@@ -136,9 +165,12 @@ export default function App() {
               onChange={(e, selectedDate) => {
                 onChange(e, selectedDate);
               }}
-              style={{ backgroundColor: theme.modalBackground }}
+              style={{
+                backgroundColor: theme.modalBackground,
+              }}
+              textColor={theme.text} // iOS 14+ only
             />
-            <Button title="Done" onPress={onClose} />
+            <Button title="Done" onPress={onClose} color={theme.text} />
           </View>
         </View>
       </Modal>
@@ -149,7 +181,8 @@ export default function App() {
     <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: theme.background }}>
       <View style={{ alignItems: 'center', marginBottom: 10 }}>
         <Text style={{ fontSize: 18, fontWeight: '600', color: theme.text }}>
-          Tasks for {selectedDate.toLocaleDateString('en-US', {
+          Tasks for{' '}
+          {selectedDate.toLocaleDateString('en-US', {
             weekday: 'short',
             month: '2-digit',
             day: '2-digit',
@@ -167,7 +200,7 @@ export default function App() {
         <DateTimePicker
           value={selectedDate}
           mode="date"
-          display="default"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={(e, date) => {
             setShowDatePicker(false);
             if (date) setSelectedDate(date);
@@ -186,7 +219,7 @@ export default function App() {
 
       <FlatList
         data={tasksForSelectedDay}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: theme.border }}>
             <Text style={{ fontSize: 18, color: theme.text }}>
@@ -228,11 +261,15 @@ export default function App() {
 
             <View style={{ marginBottom: 10 }}>
               <Button title="Pick Start Time" onPress={() => setShowStartTimePicker(true)} />
-              <Text style={{ color: theme.text, marginTop: 5 }}>Start: {formatTime(startTime.toISOString())}</Text>
+              <Text style={{ color: theme.text, marginTop: 5 }}>
+                Start: {formatTime(startTime.toISOString())}
+              </Text>
             </View>
             <View style={{ marginBottom: 10 }}>
               <Button title="Pick End Time" onPress={() => setShowEndTimePicker(true)} />
-              <Text style={{ color: theme.text, marginTop: 5 }}>End: {formatTime(endTime.toISOString())}</Text>
+              <Text style={{ color: theme.text, marginTop: 5 }}>
+                End: {formatTime(endTime.toISOString())}
+              </Text>
             </View>
 
             {/* Android Time Pickers */}
@@ -241,7 +278,7 @@ export default function App() {
                 value={startTime}
                 mode="time"
                 is24Hour={false}
-                display="default"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={(e, selected) => {
                   setShowStartTimePicker(false);
                   if (selected) setStartTime(selected);
@@ -253,7 +290,7 @@ export default function App() {
                 value={endTime}
                 mode="time"
                 is24Hour={false}
-                display="default"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={(e, selected) => {
                   setShowEndTimePicker(false);
                   if (selected) setEndTime(selected);
