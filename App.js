@@ -118,8 +118,10 @@ export default function App() {
 
     saveTasks([...tasks, newTask]);
     setTitle('');
-    setStartTime(new Date());
-    setEndTime(new Date());
+    const newStart = new Date();
+    setStartTime(newStart);
+    const newEnd = new Date(newStart.getTime() + 60 * 60 * 1000);
+    setEndTime(newEnd);
     setShowAddTaskModal(false);
   }
 
@@ -231,7 +233,16 @@ export default function App() {
         )}
       />
 
-      <Button title="Add Task" onPress={() => setShowAddTaskModal(true)} />
+    <Button
+        title="Add Task"
+        onPress={() => {
+        const now = new Date();
+        setStartTime(now);
+        setEndTime(new Date(now.getTime() + 60 * 60 * 1000)); // one hour later
+        setTitle('');
+        setShowAddTaskModal(true);
+    }}
+/>
 
       {/* Add Task Modal */}
       <Modal visible={showAddTaskModal} animationType="slide" transparent>
