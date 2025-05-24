@@ -60,7 +60,43 @@ export default function App() {
                setTasks(JSON.parse(jsonValueTasks));
            }
         }
-    })
+    }, []);
+
+    // On every start of the app, as well as daily, carry over incompplete tasks
+    useEffect(() => {
+        rollOverIncompleteTasks();
+    }, [tasks.length]);
+
+    // Storage manager that will save tasks
+    async function saveTasks(updatedTasks) {
+        setTasks(updatedTasks);
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedTasks));
+    }
+
+    // Carry over imcomplete tasks from the previous day
+    function rollOverIncompleteTasks() {
+
+    }
+
+    // Filter tasks based on the selected date
+    const tasksForSlectedDay = tasks.filter(task => isSameDay(new Date(task.startTime), selectedDate));
+
+    // Mark a task as done
+    function markAsDone(taskID) {
+
+    }
+
+    // Add a new task
+    function addTask() {
+
+    }
+
+    // Format the time to normal 12-hour format
+    function formatTime(iso) {
+
+    }
+
+    // Render the UI for the App interface
 }
 
 
