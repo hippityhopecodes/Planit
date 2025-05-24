@@ -3,31 +3,16 @@
  * @author Hope Spence
  */
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView } from 'react-native';
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  FlatList,
-  TouchableOpacity,
-  Modal,
-  Platform,
-  Alert,
-  useColorScheme,
-} from 'react-native';
+import { SafeAreaView, View, Text, TextInput, Button, FlatList, Modal, Platform, Alert, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const STORAGE_KEY = '@tasks_storage';
 
-const isSameDay = (date1, date2) => {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
-};
+const isSameDay = (date1, date2) =>
+  date1.getFullYear() === date2.getFullYear() &&
+  date1.getMonth() === date2.getMonth() &&
+  date1.getDate() === date2.getDate();
 
 const lightTheme = {
   background: '#FFFFFF',
@@ -64,9 +49,7 @@ export default function App() {
   useEffect(() => {
     const loadedTasks = async () => {
       const jsonValueTasks = await AsyncStorage.getItem(STORAGE_KEY);
-      if (jsonValueTasks) {
-        setTasks(JSON.parse(jsonValueTasks));
-      }
+      if (jsonValueTasks) setTasks(JSON.parse(jsonValueTasks));
     };
     loadedTasks();
   }, []);
@@ -98,9 +81,7 @@ export default function App() {
 
   function markAsDone(taskID) {
     const updatedTasks = tasks.map(task => {
-      if (task.id === taskID) {
-        return { ...task, done: true };
-      }
+      if (task.id === taskID) return { ...task, done: true };
       return task;
     });
     saveTasks(updatedTasks);
@@ -124,8 +105,7 @@ export default function App() {
       done: false,
     };
 
-    const updatedTasks = [...tasks, newTask];
-    saveTasks(updatedTasks);
+    saveTasks([...tasks, newTask]);
     setTitle('');
     setStartTime(new Date());
     setEndTime(new Date());
@@ -142,30 +122,67 @@ export default function App() {
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
   }
 
+  // Custom iOS modal wrapper for DateTimePicker
+  const IOSDatePickerModal = ({ visible, onClose, value, mode, onChange }) => {
+    if (Platform.OS !== 'ios') return null;
+    return (
+      <Modal transparent animationType="fade" visible={visible}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View style={{ backgroundColor: theme.modalBackground, padding: 10 }}>
+            <DateTimePicker
+              value={value}
+              mode={mode}
+              display="spinner"
+              onChange={(e, selectedDate) => {
+                onChange(e, selectedDate);
+              }}
+              style={{ backgroundColor: theme.modalBackground }}
+            />
+            <Button title="Done" onPress={onClose} />
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: theme.background }}>
-    <View style={{ alignItems: 'center', marginBottom: 10 }}>
+      <View style={{ alignItems: 'center', marginBottom: 10 }}>
         <Text style={{ fontSize: 18, fontWeight: '600', color: theme.text }}>
-        Tasks for {selectedDate.toLocaleDateString('en-US', {
+          Tasks for {selectedDate.toLocaleDateString('en-US', {
             weekday: 'short',
             month: '2-digit',
             day: '2-digit',
             year: '2-digit',
-        })}
+          })}
         </Text>
-    </View>
-      <Button title="Change Date" onPress={() => setShowDatePicker(true)} />
-      {showDatePicker && (
+      </View>
+
+      <View style={{ alignItems: 'center', marginVertical: 10 }}>
+        <Button title="Change Date" onPress={() => setShowDatePicker(true)} />
+      </View>
+
+      {/* Date Picker */}
+      {Platform.OS === 'android' && showDatePicker && (
         <DateTimePicker
           value={selectedDate}
           mode="date"
           display="default"
           onChange={(e, date) => {
-            if (date) setSelectedDate(date);
             setShowDatePicker(false);
+            if (date) setSelectedDate(date);
           }}
         />
       )}
+      <IOSDatePickerModal
+        visible={showDatePicker}
+        value={selectedDate}
+        mode="date"
+        onChange={(e, date) => {
+          if (date) setSelectedDate(date);
+        }}
+        onClose={() => setShowDatePicker(false)}
+      />
 
       <FlatList
         data={tasksForSelectedDay}
@@ -175,19 +192,15 @@ export default function App() {
             <Text style={{ fontSize: 18, color: theme.text }}>
               {item.title} ({formatTime(item.startTime)} - {formatTime(item.endTime)})
             </Text>
-            <Text style={{ color: theme.text }}>
-              Status: {item.done ? '✅ Done' : '❌ Not Done'}
-            </Text>
-            {!item.done && (
-              <Button title="Mark as Done" onPress={() => markAsDone(item.id)} />
-            )}
+            <Text style={{ color: theme.text }}>Status: {item.done ? '✅ Done' : '❌ Not Done'}</Text>
+            {!item.done && <Button title="Mark as Done" onPress={() => markAsDone(item.id)} />}
           </View>
         )}
       />
 
       <Button title="Add Task" onPress={() => setShowAddTaskModal(true)} />
 
-      {/* Modal */}
+      {/* Add Task Modal */}
       <Modal visible={showAddTaskModal} animationType="slide" transparent>
         <View style={{ flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <View
@@ -199,7 +212,7 @@ export default function App() {
               elevation: 5,
             }}
           >
-            <Text style={{ fontSize: 18, color: theme.text }}>Add Task</Text>
+            <Text style={{ fontSize: 18, color: theme.text, marginBottom: 10 }}>Add Task</Text>
             <TextInput
               placeholder="Title"
               placeholderTextColor={theme.placeholder}
@@ -212,12 +225,18 @@ export default function App() {
                 marginBottom: 10,
               }}
             />
-            <Button title="Pick Start Time" onPress={() => setShowStartTimePicker(true)} />
-            <Text style={{ color: theme.text }}>Start: {formatTime(startTime)}</Text>
-            <Button title="Pick End Time" onPress={() => setShowEndTimePicker(true)} />
-            <Text style={{ color: theme.text }}>End: {formatTime(endTime)}</Text>
 
-            {showStartTimePicker && (
+            <View style={{ marginBottom: 10 }}>
+              <Button title="Pick Start Time" onPress={() => setShowStartTimePicker(true)} />
+              <Text style={{ color: theme.text, marginTop: 5 }}>Start: {formatTime(startTime.toISOString())}</Text>
+            </View>
+            <View style={{ marginBottom: 10 }}>
+              <Button title="Pick End Time" onPress={() => setShowEndTimePicker(true)} />
+              <Text style={{ color: theme.text, marginTop: 5 }}>End: {formatTime(endTime.toISOString())}</Text>
+            </View>
+
+            {/* Android Time Pickers */}
+            {Platform.OS === 'android' && showStartTimePicker && (
               <DateTimePicker
                 value={startTime}
                 mode="time"
@@ -229,7 +248,7 @@ export default function App() {
                 }}
               />
             )}
-            {showEndTimePicker && (
+            {Platform.OS === 'android' && showEndTimePicker && (
               <DateTimePicker
                 value={endTime}
                 mode="time"
@@ -242,6 +261,26 @@ export default function App() {
               />
             )}
 
+            {/* iOS Time Pickers in Modal */}
+            <IOSDatePickerModal
+              visible={showStartTimePicker}
+              value={startTime}
+              mode="time"
+              onChange={(e, date) => {
+                if (date) setStartTime(date);
+              }}
+              onClose={() => setShowStartTimePicker(false)}
+            />
+            <IOSDatePickerModal
+              visible={showEndTimePicker}
+              value={endTime}
+              mode="time"
+              onChange={(e, date) => {
+                if (date) setEndTime(date);
+              }}
+              onClose={() => setShowEndTimePicker(false)}
+            />
+
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
               <Button title="Cancel" onPress={() => setShowAddTaskModal(false)} />
               <Button title="Save Task" onPress={addTask} />
@@ -252,6 +291,3 @@ export default function App() {
     </SafeAreaView>
   );
 }
-
-
-
