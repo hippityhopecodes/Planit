@@ -88,12 +88,45 @@ export default function App() {
 
     // Add a new task
     function addTask() {
+        if(!title) {
+            Alert.alert("Invalid Task", "Please enter a title for your task.");
+            return;
+        }
+        if(startTime >= endTime) {
+            Alert.alert("Invalid Time", "Start time must be before end time.");
+            return;
+        }
+        
+        // Create a new task object with the current time and title
+        const newTask = {
+            id: Date.now().toString(),
+            title,
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            done: false
+        };
 
+        // Add the new task to the list of tasks and save it
+        const updatedTasks = [...tasks, newTask];
+        saveTasks(updatedTasks);
+        // Reset the input fields for future tasks
+        setTitle('');
+        setStartTime(new Date());
+        setEndTime(new Date());
+        setShowAddTaskModal(false);
     }
 
     // Format the time to normal 12-hour format
     function formatTime(iso) {
+        const date = new Date(iso);
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
 
+        // Convert to 12-hour format and return
+        const formattedHours = hours % 12 || 12;
+        const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+        return `${formattedHours}:${formattedMinutes} ${ampm}`;
     }
 
     // Render the UI for the App interface
